@@ -1,0 +1,29 @@
+# .gitignore para CEO IA BR
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+.pytest_cache/
+
+# Banco de Dados & Storage (Local)
+*.db
+*.db-journal
+*.db-wal
+chroma_storage/
+chroma_db/
+products/
+knowledge_base/
+
+# Logs
+logs/
+*.log
+
+# Docker
+.dockerignore
+
+# OS
+.DS_Store
+Thumbs.db
