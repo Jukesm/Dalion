@@ -1,5 +1,5 @@
 services:
-  # 1. API - O core do sistema
+  # 1. API - O core do sistema (Agora rodando API + Worker junto para ser FREE)
   - type: web
     name: ceo-ia-api
     runtime: docker
@@ -10,7 +10,7 @@ services:
           name: ceo-ia-db
           property: connectionString
       - key: REDIS_URL
-        sync: false # Coloque sua URL do Upstash aqui se não usar o do Render
+        sync: false # Coloque sua URL do Upstash aqui (necessário para os jobs)
       - key: AI_PROVIDER
         value: groq
       - key: GROQ_API_KEY
@@ -20,24 +20,6 @@ services:
       - key: SECRET_KEY
         sync: false
       - key: ADMIN_TOKEN
-        sync: false
-
-  # 2. Worker - Processa background jobs
-  - type: worker
-    name: ceo-ia-worker
-    runtime: docker
-    plan: free
-    dockerCommand: ./worker.sh
-    envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: ceo-ia-db
-          property: connectionString
-      - key: REDIS_URL
-        sync: false
-      - key: AI_PROVIDER
-        value: groq
-      - key: GROQ_API_KEY
         sync: false
 
 databases:
