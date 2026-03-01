@@ -6,32 +6,30 @@ def migrate_v4():
     print(f"Iniciando Migração em: {DATABASE_URL}")
     engine = create_engine(DATABASE_URL)
     
-    # Comandos de alteração (Sintaxe compatível com PG e SQLite)
+    # Comandos para adicionar colunas individualmente
     commands = [
-        # Users
-        "ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT FALSE",
-        "ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT TRUE",
-        "ALTER TABLE users ADD COLUMN last_run_at TEXT",
-        "ALTER TABLE users ADD COLUMN created_at FLOAT",
-        # Ideas
-        "ALTER TABLE ideas ADD COLUMN views INTEGER DEFAULT 0",
-        "ALTER TABLE ideas ADD COLUMN clicks INTEGER DEFAULT 0",
-        "ALTER TABLE ideas ADD COLUMN conversions INTEGER DEFAULT 0",
-        "ALTER TABLE ideas ADD COLUMN version INTEGER DEFAULT 1",
-        "ALTER TABLE ideas ADD COLUMN created_at FLOAT"
+        ("users", "is_admin", "BOOLEAN DEFAULT FALSE"),
+        ("users", "is_active", "BOOLEAN DEFAULT TRUE"),
+        ("users", "last_run_at", "TEXT"),
+        ("users", "created_at", "FLOAT"),
+        ("ideas", "views", "INTEGER DEFAULT 0"),
+        ("ideas", "clicks", "INTEGER DEFAULT 0"),
+        ("ideas", "conversions", "INTEGER DEFAULT 0"),
+        ("ideas", "version", "INTEGER DEFAULT 1"),
+        ("ideas", "created_at", "FLOAT")
     ]
     
-    with engine.connect() as conn:
-        for cmd in commands:
+    for table, col, col_type in commands:
+        with engine.begin() as conn: # Inicia uma transação por comando
             try:
-                conn.execute(text(cmd))
-                conn.commit()
-                print(f"Executado: {cmd}")
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {col_type}"))
+                print(f"Sucesso: {table}.{col} adicionada.")
             except Exception as e:
-                # Silencia erros de "coluna já existe"
+                # Ignora se a coluna já existir
                 if "already exists" in str(e).lower() or "duplicate column" in str(e).lower():
-                    continue
-                print(f"Aviso: {e}")
+                    print(f"Info: {table}.{col} já existe.")
+                else:
+                    print(f"Erro em {table}.{col}: {e}")
 
     print("Migration Scale 4.0 complete.")
 
