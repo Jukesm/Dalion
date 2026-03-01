@@ -1,12 +1,20 @@
 import os
 from sqlalchemy import create_engine, text
 from config import DATABASE_URL
+from models import Base
+from database import engine
 
 def migrate_v4():
-    print(f"Iniciando Migração em: {DATABASE_URL}")
-    engine = create_engine(DATABASE_URL)
+    print(f"🚀 Iniciando Migração em: {DATABASE_URL}")
     
-    # Comandos para adicionar colunas individualmente
+    # 1. Garante que as tabelas básicas existem
+    try:
+        Base.metadata.create_all(bind=engine)
+        print("✅ Estrutura básica do banco garantida.")
+    except Exception as e:
+        print(f"❌ Erro ao criar tabelas: {e}")
+
+    # 2. Comandos para adicionar colunas individualmente (para upgrades de versão)
     commands = [
         ("users", "is_admin", "BOOLEAN DEFAULT FALSE"),
         ("users", "is_active", "BOOLEAN DEFAULT TRUE"),
@@ -20,18 +28,20 @@ def migrate_v4():
     ]
     
     for table, col, col_type in commands:
-        with engine.begin() as conn: # Inicia uma transação por comando
-            try:
+        # Usamos uma transação isolada por coluna para evitar abortar o bloco todo
+        try:
+            with engine.connect() as conn:
                 conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {col_type}"))
-                print(f"Sucesso: {table}.{col} adicionada.")
-            except Exception as e:
-                # Ignora se a coluna já existir
-                if "already exists" in str(e).lower() or "duplicate column" in str(e).lower():
-                    print(f"Info: {table}.{col} já existe.")
-                else:
-                    print(f"Erro em {table}.{col}: {e}")
+                conn.commit()
+                print(f"➕ Coluna adicionada: {table}.{col}")
+        except Exception as e:
+            # Silencia apenas erros de duplicata
+            if "already exists" in str(e).lower() or "duplicate column" in str(e).lower():
+                pass 
+            else:
+                print(f"⚠️ Aviso em {table}.{col}: {e}")
 
-    print("Migration Scale 4.0 complete.")
+    print("🏁 Migração Scale 4.0 concluída.")
 
 if __name__ == "__main__":
     migrate_v4()
