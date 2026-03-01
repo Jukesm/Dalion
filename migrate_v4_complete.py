@@ -1,40 +1,38 @@
-import sqlite3
-from logger import logger
+import os
+from sqlalchemy import create_engine, text
+from config import DATABASE_URL
 
 def migrate_v4():
-    conn = sqlite3.connect('ceo_ia.db')
-    cursor = conn.cursor()
+    print(f"Iniciando Migração em: {DATABASE_URL}")
+    engine = create_engine(DATABASE_URL)
     
-    # Colunas para User
-    user_cols = [
-        ('is_admin', 'BOOLEAN DEFAULT 0'),
-        ('is_active', 'BOOLEAN DEFAULT 1'),
-        ('last_run_at', 'TEXT'),
-        ('created_at', 'FLOAT')
+    # Comandos de alteração (Sintaxe compatível com PG e SQLite)
+    commands = [
+        # Users
+        "ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT FALSE",
+        "ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT TRUE",
+        "ALTER TABLE users ADD COLUMN last_run_at TEXT",
+        "ALTER TABLE users ADD COLUMN created_at FLOAT",
+        # Ideas
+        "ALTER TABLE ideas ADD COLUMN views INTEGER DEFAULT 0",
+        "ALTER TABLE ideas ADD COLUMN clicks INTEGER DEFAULT 0",
+        "ALTER TABLE ideas ADD COLUMN conversions INTEGER DEFAULT 0",
+        "ALTER TABLE ideas ADD COLUMN version INTEGER DEFAULT 1",
+        "ALTER TABLE ideas ADD COLUMN created_at FLOAT"
     ]
     
-    # Colunas para Idea
-    idea_cols = [
-        ('views', 'INTEGER DEFAULT 0'),
-        ('clicks', 'INTEGER DEFAULT 0'),
-        ('conversions', 'INTEGER DEFAULT 0'),
-        ('version', 'INTEGER DEFAULT 1'),
-        ('created_at', 'FLOAT')
-    ]
-    
-    def add_cols(table, cols):
-        for col_name, col_def in cols:
+    with engine.connect() as conn:
+        for cmd in commands:
             try:
-                cursor.execute(f"ALTER TABLE {table} ADD COLUMN {col_name} {col_def}")
-                print(f"Colunm {col_name} added to {table}.")
-            except sqlite3.OperationalError as e:
-                print(f"Skipping {col_name} in {table}: {e}")
+                conn.execute(text(cmd))
+                conn.commit()
+                print(f"Executado: {cmd}")
+            except Exception as e:
+                # Silencia erros de "coluna já existe"
+                if "already exists" in str(e).lower() or "duplicate column" in str(e).lower():
+                    continue
+                print(f"Aviso: {e}")
 
-    add_cols('users', user_cols)
-    add_cols('ideas', idea_cols)
-    
-    conn.commit()
-    conn.close()
     print("Migration Scale 4.0 complete.")
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 import os
 
-DATABASE_URL = "sqlite:///./ceo_ia.db"
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./ceo_ia.db")
 
 HOT_MEMORY_PATH = "memory_hot.txt"
 WARM_MEMORY_PATH = "memory_warm.txt"
