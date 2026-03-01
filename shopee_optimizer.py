@@ -1,8 +1,7 @@
-import requests
+from ai_provider import ai
+from logger import logger
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-
-def optimize_product(title, description):
+async def optimize_product(title, description):
     """
     Especialista em SEO e conversão para Shopee Brasil.
     Gera títulos, descrições e bullets otimizados usando IA.
@@ -25,11 +24,7 @@ def optimize_product(title, description):
     """
 
     try:
-        response = requests.post(OLLAMA_URL, json={
-            "model": "mistral",
-            "prompt": prompt,
-            "stream": False
-        }, timeout=60)
-        return response.json()["response"]
+        return await ai.generate(prompt)
     except Exception as e:
+        logger.error(f"Erro na otimização: {e}")
         return f"Erro na otimização: {e}"

@@ -1,4 +1,7 @@
 from ai_provider import ai
+from logger import logger
+from tenacity import retry, stop_after_attempt, wait_exponential
+from circuit_breaker import ollama_breaker
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=15))
 async def growth_money_engine(product_title, product_description, cost_price=None, selling_price=None, niche="beleza"):
@@ -89,9 +92,9 @@ Foque em lucro, diferenciação e escala.
 """
 
     try:
-        # Usa o Circuit Breaker para proteger a chamada
-        response_text = await ollama_breaker.call(_call_ollama_raw, prompt)
+        # Usa o Circuit Breaker para proteger a chamada através do AIProvider
+        response_text = await ollama_breaker.call(ai.generate, prompt)
         return response_text
     except Exception as e:
-        logger.error(f"Erro no Motor de Crescimento via Circuit Breaker: {e}")
+        logger.error(f"Erro no Motor de Crescimento: {e}")
         raise e

@@ -32,12 +32,8 @@ async def generate_sales_copy(title, description, target, price):
     """
 
     try:
-        response = requests.post(OLLAMA_URL, json={
-            "model": "mistral",
-            "prompt": prompt,
-            "stream": False
-        }, timeout=60)
-        return response.json()["response"]
+        # Usa o AIProvider configurado (Groq ou Ollama) e o Circuit Breaker
+        return await ollama_breaker.call(ai.generate, prompt)
     except Exception as e:
         logger.error(f"Erro ao gerar copy: {e}")
         raise e

@@ -285,12 +285,12 @@ def approve_idea(idea_id: int, current_user: User = Depends(get_current_user), d
 from shopee_optimizer import optimize_product
 
 @app.post("/optimize-shopee")
-def optimize_shopee(title: str, description: str, current_user: User = Depends(get_current_user)):
+async def optimize_shopee(title: str, description: str, current_user: User = Depends(get_current_user)):
     """
     Motor 2: Otimização Shopee.
     Reescreve títulos e descrições para conversão e SEO.
     """
-    result = optimize_product(title, description)
+    result = await optimize_product(title, description)
     save_memory(f"Shopee Optimizer usado por {current_user.email}: {title}", level="hot")
     return {"optimized": result}
 
@@ -343,12 +343,12 @@ def mercadopago_callback(code: str, db: Session = Depends(get_db)):
     return {"message": "Mercado Pago conectado com sucesso!"}
 
 @app.post("/execute/{idea_id}")
-def run_execution(idea_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+async def run_execution(idea_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     # Agora passamos o token do usuário para o executor
-    return execute_idea(idea_id, db=db, access_token=current_user.mp_access_token)
+    return await execute_idea(idea_id, db=db, access_token=current_user.mp_access_token)
 
 # Função interna para ser chamada pelo agendador ou pelo endpoint
-def run_auto_pipeline_internal(user: User, db: Session):
+async def run_auto_pipeline_internal(user: User, db: Session):
     """Lógica central do pipeline autônomo."""
     try:
         # 1. Gerar Ideia
@@ -360,7 +360,7 @@ def run_auto_pipeline_internal(user: User, db: Session):
         db.commit()
         
         # 3. Executar (Gerar Copy e HTML usando o token do MP do usuário)
-        execution_result = execute_idea(idea.id, db=db, access_token=user.mp_access_token)
+        execution_result = await execute_idea(idea.id, db=db, access_token=user.mp_access_token)
         
         save_memory(f"Pipeline Autônomo processado: {idea.title} para {user.email}", level="hot")
         return {
