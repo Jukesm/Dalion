@@ -87,8 +87,8 @@ def get_metrics():
 def health_check():
     return {
         "status": "healthy", 
-        "version": "4.1-deploy-groq",
-        "provider": os.getenv("AI_PROVIDER", "ollama")
+        "version": "4.2-final-optimization",
+        "provider": os.getenv("AI_PROVIDER", "groq")
     }
 
 # Criar pasta de produtos se não existir
